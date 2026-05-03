@@ -37,9 +37,9 @@ $dest    = trim($_POST['dest'] ?? 'CITIZEN_CT_S310_clocky4');
 $trailer = trim($_POST['trailer'] ?? '');
 $qrdata  = trim($_POST['qrdata'] ?? '');
 
-$size    = max(1, min(8, (int)($_POST['size']    ?? 1)));
-$tsize   = max(1, min(8, (int)($_POST['tsize']   ?? 2)));
-$hsize   = max(1, min(8, (int)($_POST['hsize']   ?? 4)));
+$size    = max(1, min(60, (int)($_POST['size']    ?? 1)));
+$tsize   = max(1, min(60, (int)($_POST['tsize']   ?? 2)));
+$hsize   = max(1, min(60, (int)($_POST['hsize']   ?? 4)));
 $eject   = max(0, min(20, (int)($_POST['eject']  ?? 3)));
 
 $px_allowed = [384, 576, 832];

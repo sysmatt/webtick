@@ -219,7 +219,7 @@ html, body {
 }
 
 /* ── Fields ─────────────────────────────────────────────────── */
-.field { display: flex; flex-direction: column; gap: 5px; }
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 
 .field label {
     font-size: 12px;
@@ -444,6 +444,21 @@ input[type=number] { width: 100%; }
 }
 
 .result-area:empty { display: none; }
+
+.cmd-preview {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    color: var(--muted);
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.5;
+    max-height: 80px;
+    overflow-y: auto;
+}
 
 .result-success {
     background: rgba(63, 185, 80, 0.12);
@@ -905,6 +920,7 @@ input[type=number] { width: 100%; }
     </div><!-- /form-body -->
 
     <div class="actions-bar">
+      <div class="cmd-preview" id="cmd-preview"></div>
       <button type="button" class="btn-print" id="print-btn">
         <span class="btn-icon" id="print-icon">🖨</span>
         <span id="print-label">Print Ticket</span>
@@ -981,6 +997,73 @@ document.querySelectorAll('.section-header').forEach(hdr => {
         el.addEventListener('input', () => { val.textContent = el.value; });
     }
 });
+
+// ── Command preview ──────────────────────────────────────────────
+const FONT_MAP_TTF = {
+    '':                      '',
+    'liberation-sans':       '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
+    'liberation-sans-bold':  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
+    'liberation-mono':       '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf',
+    'liberation-mono-bold':  '/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf',
+    'liberation-serif':      '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
+    'liberation-serif-bold': '/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf',
+    'ubuntu':                '/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf',
+    'ubuntu-bold':           '/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf',
+    'ubuntu-mono':           '/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf',
+};
+
+function shellArg(s) {
+    s = String(s);
+    if (/^[a-zA-Z0-9_.\/\-]+$/.test(s)) return s;
+    return "'" + s.replace(/'/g, "'\\''") + "'";
+}
+
+function buildCmdPreview() {
+    const title     = (document.getElementById('title').value || 'Ticket').trim();
+    const header    = document.getElementById('header').value.trim();
+    const trailer   = document.getElementById('trailer').value.trim();
+    const qrdata    = document.getElementById('qrdata').value.trim();
+    const dest      = document.getElementById('dest').value;
+    const size      = Math.max(1, Math.min(60, parseInt(document.getElementById('size').value)  || 1));
+    const tsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('tsize').value) || 2));
+    const hsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('hsize').value) || 4));
+    const eject     = Math.max(0, Math.min(20, parseInt(document.getElementById('eject').value) || 3));
+    const pixwidth  = document.getElementById('pixwidth').value;
+    const impl      = document.getElementById('impl').value;
+    const bodyttf   = FONT_MAP_TTF[document.getElementById('bodyttf').value]   || '';
+    const headerttf = FONT_MAP_TTF[document.getElementById('headerttf').value] || '';
+    const titlettf  = FONT_MAP_TTF[document.getElementById('titlettf').value]  || '';
+    const cut       = document.getElementById('cut').checked;
+    const beep      = document.getElementById('beep').checked;
+    const center    = document.getElementById('center').checked;
+    const landscape = document.getElementById('landscape').checked;
+    const dummy     = document.getElementById('dummy').checked;
+    const ntr       = document.getElementById('new_text_render').checked;
+
+    let cmd = '/usr/bin/python3 /opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print';
+    cmd += ' -d '      + shellArg(dest);
+    cmd += ' -S '      + size;
+    cmd += ' -T '      + tsize;
+    cmd += ' --hsize ' + hsize;
+    cmd += ' -e '      + eject;
+    cmd += ' -P '      + pixwidth;
+    cmd += ' --impl '  + shellArg(impl);
+    if (header)    cmd += ' --header '    + shellArg(header);
+    if (trailer)   cmd += ' --trailer '   + shellArg(trailer);
+    if (qrdata)    cmd += ' --qrdata '    + shellArg(qrdata);
+    if (bodyttf)   cmd += ' --bodyttf '   + shellArg(bodyttf);
+    if (headerttf) cmd += ' --headerttf ' + shellArg(headerttf);
+    if (titlettf)  cmd += ' --titlettf '  + shellArg(titlettf);
+    if (cut)       cmd += ' --cut';
+    if (beep)      cmd += ' --beep';
+    if (center)    cmd += ' -C';
+    if (landscape) cmd += ' --landscape';
+    if (dummy)     cmd += ' --dummy';
+    if (ntr)       cmd += ' --new-text-render';
+    cmd += ' ' + shellArg(title);
+
+    document.getElementById('cmd-preview').textContent = cmd;
+}
 
 // ── Preview update ───────────────────────────────────────────────
 const FONT_CSS = {
@@ -1061,6 +1144,8 @@ function updatePreview() {
 
     // Cut
     document.getElementById('prev-cut').style.display = cut ? '' : 'none';
+
+    buildCmdPreview();
 }
 
 // Live timestamp

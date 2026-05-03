@@ -752,6 +752,11 @@ input[type=number] { width: 100%; }
                 <span class="size-val" id="hsize-val">4</span>
               </div>
             </div>
+            <select id="headerttf" name="headerttf">
+              <?php foreach ($font_options as $k => $v): ?>
+              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
+              <?php endforeach; ?>
+            </select>
             <input type="text" id="header" name="header" placeholder="Optional — e.g. ACME CORP" autocomplete="off">
           </div>
           <div class="field">
@@ -762,6 +767,11 @@ input[type=number] { width: 100%; }
                 <span class="size-val" id="tsize-val">2</span>
               </div>
             </div>
+            <select id="titlettf" name="titlettf">
+              <?php foreach ($font_options as $k => $v): ?>
+              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
+              <?php endforeach; ?>
+            </select>
             <input type="text" id="title" name="title" placeholder="Ticket" autocomplete="off">
           </div>
           <div class="field">
@@ -772,6 +782,11 @@ input[type=number] { width: 100%; }
                 <span class="size-val" id="size-val">1</span>
               </div>
             </div>
+            <select id="bodyttf" name="bodyttf">
+              <?php foreach ($font_options as $k => $v): ?>
+              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
+              <?php endforeach; ?>
+            </select>
             <textarea id="body" name="body" rows="5" placeholder="Body text (each line printed separately)…"></textarea>
           </div>
           <div class="field-2col">
@@ -798,33 +813,8 @@ input[type=number] { width: 100%; }
             <label class="toggle-label">
               <input type="checkbox" id="center" name="center">
               <span class="toggle-switch"></span>
-              <span class="toggle-text">Center-align title</span>
+              <span class="toggle-text">Center-align text</span>
             </label>
-          </div>
-          <div class="field">
-            <label for="headerttf">Header Font (TTF)</label>
-            <select id="headerttf" name="headerttf">
-              <?php foreach ($font_options as $k => $v): ?>
-              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="field">
-            <label for="titlettf">Title Font (TTF)</label>
-            <select id="titlettf" name="titlettf">
-              <?php foreach ($font_options as $k => $v): ?>
-              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="field">
-            <label for="bodyttf">Body Font (TTF)</label>
-            <select id="bodyttf" name="bodyttf">
-              <?php foreach ($font_options as $k => $v): ?>
-              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
-              <?php endforeach; ?>
-            </select>
-            <span class="hint">TTF renders text as a raster image — ideal for custom looks.</span>
           </div>
           <div class="field">
             <label class="toggle-label">
@@ -833,6 +823,7 @@ input[type=number] { width: 100%; }
               <span class="toggle-text">Use new TTF renderer (Pillow textbbox)</span>
             </label>
           </div>
+          <span class="hint">Font selects use TTF rendering — raster image output, ideal for custom looks.</span>
         </div>
       </div>
 
@@ -910,13 +901,6 @@ input[type=number] { width: 100%; }
               <input type="range" id="eject" name="eject" min="0" max="20" value="3">
               <span class="size-val" id="eject-val">3</span>
             </div>
-          </div>
-          <div class="field">
-            <label class="toggle-label" style="color: var(--amber) !important">
-              <input type="checkbox" id="dummy" name="dummy">
-              <span class="toggle-switch"></span>
-              <span class="toggle-text" style="color: var(--amber)">Dummy mode — process but don't send to printer</span>
-            </label>
           </div>
         </div>
       </div>
@@ -1041,7 +1025,6 @@ function buildCmdPreview() {
     const beep      = document.getElementById('beep').checked;
     const center    = document.getElementById('center').checked;
     const landscape = document.getElementById('landscape').checked;
-    const dummy     = document.getElementById('dummy').checked;
     const ntr       = document.getElementById('new_text_render').checked;
 
     let cmd = '/usr/bin/python3 /opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print';
@@ -1062,7 +1045,6 @@ function buildCmdPreview() {
     if (beep)      cmd += ' --beep';
     if (center)    cmd += ' -C';
     if (landscape) cmd += ' --landscape';
-    if (dummy)     cmd += ' --dummy';
     if (ntr)       cmd += ' --new-text-render';
     cmd += ' ' + shellArg(title);
 
@@ -1113,7 +1095,7 @@ function updatePreview() {
     if (header) {
         headerBlock.style.display = '';
         prevHeader.textContent = header;
-        prevHeader.style.fontSize = (hsize * 5 + 10) + 'px';
+        prevHeader.style.fontSize = (hsize + 10) + 'px';
         prevHeader.style.textAlign = align;
         prevHeader.style.fontFamily = FONT_CSS[headerttf] || 'sans-serif';
         prevHeader.style.fontWeight = headerttf.includes('bold') ? '800' : '800';
@@ -1124,7 +1106,7 @@ function updatePreview() {
     // Title
     const prevTitle = document.getElementById('prev-title');
     prevTitle.textContent = title;
-    prevTitle.style.fontSize = (tsize * 4 + 10) + 'px';
+    prevTitle.style.fontSize = (tsize * 0.8 + 10) + 'px';
     prevTitle.style.textAlign = align;
     prevTitle.style.fontFamily = FONT_CSS[titlettf] || 'sans-serif';
     prevTitle.style.fontWeight = titlettf.includes('bold') ? '800' : '700';
@@ -1132,7 +1114,7 @@ function updatePreview() {
     // Body
     const prevBody = document.getElementById('prev-body');
     prevBody.textContent = body;
-    prevBody.style.fontSize = (size * 2 + 10) + 'px';
+    prevBody.style.fontSize = (size * 0.4 + 10) + 'px';
     prevBody.style.textAlign = align;
     prevBody.style.fontFamily = FONT_CSS[bodyttf] || "'Courier New', Courier, monospace";
     prevBody.style.display = body ? '' : 'none';
@@ -1182,7 +1164,7 @@ document.getElementById('print-btn').addEventListener('click', async function ()
         'hsize','tsize','size','eject','pixwidth','impl',
         'dest','headerttf','titlettf','bodyttf'
     ];
-    const toggles = ['center','cut','beep','landscape','dummy','new_text_render'];
+    const toggles = ['center','cut','beep','landscape','new_text_render'];
     const data = {};
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -1235,9 +1217,6 @@ function showResult(r) {
         area.className = 'result-area result-error';
         const msg = (r.error || r.stderr || 'Process exited with code ' + r.exit_code).trim();
         area.innerHTML = `<strong>Print failed</strong><br><pre>${esc(msg)}</pre>`;
-        if (r.command) {
-            area.innerHTML += `<details><summary>Command (dummy mode)</summary><pre>${esc(r.command)}</pre></details>`;
-        }
     }
     clearTimeout(area._timer);
     area._timer = setTimeout(() => {

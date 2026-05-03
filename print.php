@@ -53,7 +53,6 @@ $cut            = !empty($_POST['cut']);
 $beep           = !empty($_POST['beep']);
 $center         = !empty($_POST['center']);
 $landscape      = !empty($_POST['landscape']);
-$dummy          = !empty($_POST['dummy']);
 $new_text_render= !empty($_POST['new_text_render']);
 
 $bodyttf   = FONT_MAP[$_POST['bodyttf']   ?? ''] ?? '';
@@ -88,7 +87,6 @@ if ($cut)             $cmd .= ' --cut';
 if ($beep)            $cmd .= ' --beep';
 if ($center)          $cmd .= ' -C';
 if ($landscape)       $cmd .= ' --landscape';
-if ($dummy)           $cmd .= ' --dummy';
 if ($new_text_render) $cmd .= ' --new-text-render';
 
 $cmd .= ' ' . escapeshellarg($title);
@@ -127,10 +125,5 @@ if ($exit_code !== 0) {
     $resp['error'] = trim($stderr ?: $stdout ?: 'Process exited with code ' . $exit_code);
 }
 
-if ($dummy) {
-    $resp['command'] = $cmd;   // expose command only in dummy/test mode
-    $resp['output']  = $stdout;
-    $resp['stderr']  = $stderr;
-}
 
 echo json_encode($resp);

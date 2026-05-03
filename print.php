@@ -7,8 +7,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-define('TOOL_PYTHON', '/home/sysmatt/Documents/workspace/sysmatt.escpos.ticket.print/.venv/bin/python');
-define('TOOL_SCRIPT', '/home/sysmatt/Documents/workspace/sysmatt.escpos.ticket.print/sysmatt.escpos.ticket.print');
+#define('TOOL_PYTHON', '/home/sysmatt/Documents/workspace/sysmatt.escpos.ticket.print/.venv/bin/python');
+define('TOOL_PYTHON', '/usr/bin/python3');
+#define('TOOL_SCRIPT', '/home/sysmatt/Documents/workspace/sysmatt.escpos.ticket.print/sysmatt.escpos.ticket.print');
+define('TOOL_SCRIPT', '/opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print');
 
 // Whitelisted TTF font paths — no arbitrary user-supplied paths
 const FONT_MAP = [

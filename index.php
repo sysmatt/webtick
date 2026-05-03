@@ -842,7 +842,13 @@ input[type=number] { width: 100%; }
               <input type="text" id="trailer" name="trailer" placeholder="Footer note" autocomplete="off">
             </div>
             <div class="field">
-              <label for="qrdata">QR Code Data</label>
+              <div class="field-label-row">
+                <label for="qrdata">QR Code Data</label>
+                <div class="size-control">
+                  <input type="range" id="qrsize" name="qrsize" min="1" max="16" value="6">
+                  <span class="size-val" id="qrsize-val">6</span>
+                </div>
+              </div>
               <input type="text" id="qrdata" name="qrdata" placeholder="URL or text" autocomplete="off">
             </div>
           </div>
@@ -1035,7 +1041,7 @@ document.querySelectorAll('.section-header').forEach(hdr => {
 });
 
 // ── Slider value display ─────────────────────────────────────────
-['hsize', 'tsize', 'size', 'eject'].forEach(id => {
+['hsize', 'tsize', 'size', 'eject', 'qrsize'].forEach(id => {
     const el = document.getElementById(id);
     const val = document.getElementById(id + '-val');
     if (el && val) {
@@ -1073,6 +1079,7 @@ function buildCmdPreview() {
     const tsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('tsize').value) || 2));
     const hsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('hsize').value) || 4));
     const eject     = Math.max(0, Math.min(20, parseInt(document.getElementById('eject').value) || 3));
+    const qrsize    = Math.max(1, Math.min(16, parseInt(document.getElementById('qrsize').value) || 6));
     const pixwidth  = document.getElementById('pixwidth').value;
     const impl      = document.getElementById('impl').value;
     const bodyttf   = FONT_MAP_TTF[document.getElementById('bodyttf').value]   || '';
@@ -1094,7 +1101,7 @@ function buildCmdPreview() {
     cmd += ' --impl '  + shellArg(impl);
     if (header)    cmd += ' --header '    + shellArg(header);
     if (trailer)   cmd += ' --trailer '   + shellArg(trailer);
-    if (qrdata)    cmd += ' --qrdata '    + shellArg(qrdata);
+    if (qrdata)    cmd += ' --qrdata '    + shellArg(qrdata) + ' --qrsize ' + qrsize;
     if (bodyttf)   cmd += ' --bodyttf '   + shellArg(bodyttf);
     if (headerttf) cmd += ' --headerttf ' + shellArg(headerttf);
     if (titlettf)  cmd += ' --titlettf '  + shellArg(titlettf);
@@ -1218,7 +1225,7 @@ document.getElementById('print-btn').addEventListener('click', async function ()
     const form = document.createElement('form');
     const fields = [
         'title','header','body','trailer','qrdata',
-        'hsize','tsize','size','eject','pixwidth','impl',
+        'hsize','tsize','size','eject','qrsize','pixwidth','impl',
         'dest','headerttf','titlettf','bodyttf'
     ];
     const toggles = ['center','cut','beep','landscape','new_text_render'];

@@ -36,6 +36,7 @@ $body    = $_POST['body'] ?? '';
 $dest    = trim($_POST['dest'] ?? 'CITIZEN_CT_S310_clocky4');
 $trailer = trim($_POST['trailer'] ?? '');
 $qrdata  = trim($_POST['qrdata'] ?? '');
+$qrsize  = max(1, min(16, (int)($_POST['qrsize'] ?? 6)));
 
 $size    = max(1, min(60, (int)($_POST['size']    ?? 1)));
 $tsize   = max(1, min(60, (int)($_POST['tsize']   ?? 2)));
@@ -77,7 +78,7 @@ $cmd .= ' --impl ' . escapeshellarg($impl);
 
 if ($header  !== '') $cmd .= ' --header '  . escapeshellarg($header);
 if ($trailer !== '') $cmd .= ' --trailer ' . escapeshellarg($trailer);
-if ($qrdata  !== '') $cmd .= ' --qrdata '  . escapeshellarg($qrdata);
+if ($qrdata  !== '') $cmd .= ' --qrdata '  . escapeshellarg($qrdata) . ' --qrsize ' . $qrsize;
 
 if ($bodyttf   !== '') $cmd .= ' --bodyttf '   . escapeshellarg($bodyttf);
 if ($headerttf !== '') $cmd .= ' --headerttf ' . escapeshellarg($headerttf);

@@ -756,21 +756,21 @@ input[type=number] { width: 100%; }
             <div class="field">
               <label>Header Size</label>
               <div class="size-control">
-                <input type="range" id="hsize" name="hsize" min="1" max="8" value="4">
+                <input type="range" id="hsize" name="hsize" min="1" max="60" value="4">
                 <span class="size-val" id="hsize-val">4</span>
               </div>
             </div>
             <div class="field">
               <label>Title Size</label>
               <div class="size-control">
-                <input type="range" id="tsize" name="tsize" min="1" max="8" value="2">
+                <input type="range" id="tsize" name="tsize" min="1" max="60" value="2">
                 <span class="size-val" id="tsize-val">2</span>
               </div>
             </div>
             <div class="field">
               <label>Body Size</label>
               <div class="size-control">
-                <input type="range" id="size" name="size" min="1" max="8" value="1">
+                <input type="range" id="size" name="size" min="1" max="60" value="1">
                 <span class="size-val" id="size-val">1</span>
               </div>
             </div>
@@ -1026,7 +1026,7 @@ function updatePreview() {
     if (header) {
         headerBlock.style.display = '';
         prevHeader.textContent = header;
-        prevHeader.style.fontSize = Math.min(hsize * 5 + 10, 48) + 'px';
+        prevHeader.style.fontSize = (hsize * 5 + 10) + 'px';
         prevHeader.style.textAlign = align;
         prevHeader.style.fontFamily = FONT_CSS[headerttf] || 'sans-serif';
         prevHeader.style.fontWeight = headerttf.includes('bold') ? '800' : '800';
@@ -1037,7 +1037,7 @@ function updatePreview() {
     // Title
     const prevTitle = document.getElementById('prev-title');
     prevTitle.textContent = title;
-    prevTitle.style.fontSize = Math.min(tsize * 4 + 10, 36) + 'px';
+    prevTitle.style.fontSize = (tsize * 4 + 10) + 'px';
     prevTitle.style.textAlign = align;
     prevTitle.style.fontFamily = FONT_CSS[titlettf] || 'sans-serif';
     prevTitle.style.fontWeight = titlettf.includes('bold') ? '800' : '700';
@@ -1045,7 +1045,7 @@ function updatePreview() {
     // Body
     const prevBody = document.getElementById('prev-body');
     prevBody.textContent = body;
-    prevBody.style.fontSize = Math.min(size * 2 + 10, 22) + 'px';
+    prevBody.style.fontSize = (size * 2 + 10) + 'px';
     prevBody.style.textAlign = align;
     prevBody.style.fontFamily = FONT_CSS[bodyttf] || "'Courier New', Courier, monospace";
     prevBody.style.display = body ? '' : 'none';

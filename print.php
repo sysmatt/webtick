@@ -119,11 +119,12 @@ $exit_code = proc_close($process);
 $resp = [
     'success'   => $exit_code === 0,
     'exit_code' => $exit_code,
+    'stdout'    => $stdout,
+    'stderr'    => $stderr,
 ];
 
 if ($exit_code !== 0) {
     $resp['error'] = trim($stderr ?: $stdout ?: 'Process exited with code ' . $exit_code);
 }
-
 
 echo json_encode($resp);

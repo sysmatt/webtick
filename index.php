@@ -521,6 +521,53 @@ input[type=number] { width: 100%; }
 .preview-panel::-webkit-scrollbar { width: 6px; }
 .preview-panel::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
 
+/* ── Output log ──────────────────────────────────────────────── */
+.output-log {
+    width: 100%;
+    max-width: 340px;
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.output-log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+}
+.output-log-status {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.output-log-status.ok  { color: var(--green); }
+.output-log-status.err { color: var(--red); }
+.output-log-body {
+    padding: 8px 10px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.5;
+}
+.output-log-body:empty::before {
+    content: 'No output yet.';
+    color: var(--muted);
+    font-style: italic;
+}
+
 .preview-label {
     font-size: 11px;
     font-weight: 600;
@@ -962,6 +1009,16 @@ input[type=number] { width: 100%; }
         <div class="receipt-edge receipt-edge-bottom"></div>
       </div>
     </div>
+
+    <!-- Output log -->
+    <div class="output-log" id="output-log">
+      <div class="output-log-header">
+        <span>Output</span>
+        <span class="output-log-status" id="output-log-status"></span>
+      </div>
+      <div class="output-log-body" id="output-log-body"></div>
+    </div>
+
   </div>
 
 </main>
@@ -1209,20 +1266,37 @@ function esc(str) {
 }
 
 function showResult(r) {
+    // Brief indicator in the actions bar
     const area = document.getElementById('result-area');
     if (r.success) {
         area.className = 'result-area result-success';
         area.innerHTML = '✓ Ticket sent successfully!';
     } else {
         area.className = 'result-area result-error';
-        const msg = (r.error || r.stderr || 'Process exited with code ' + r.exit_code).trim();
-        area.innerHTML = `<strong>Print failed</strong><br><pre>${esc(msg)}</pre>`;
+        area.innerHTML = `<strong>Print failed</strong> (exit ${r.exit_code ?? '?'})`;
     }
     clearTimeout(area._timer);
     area._timer = setTimeout(() => {
         area.className = 'result-area';
         area.innerHTML = '';
-    }, 10000);
+    }, 8000);
+
+    // Full output in the log below the preview
+    const status = document.getElementById('output-log-status');
+    const body   = document.getElementById('output-log-body');
+    if (r.success) {
+        status.textContent = '✓ OK';
+        status.className = 'output-log-status ok';
+    } else {
+        status.textContent = '✗ Error (exit ' + (r.exit_code ?? '?') + ')';
+        status.className = 'output-log-status err';
+    }
+    const parts = [];
+    if (r.stdout && r.stdout.trim()) parts.push(r.stdout.trim());
+    if (r.stderr && r.stderr.trim()) parts.push('--- stderr ---\n' + r.stderr.trim());
+    if (!parts.length && !r.success)  parts.push(r.error || 'No output captured.');
+    body.textContent = parts.join('\n\n');
+    body.scrollTop = body.scrollHeight;
 }
 </script>
 </body>

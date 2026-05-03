@@ -425,6 +425,51 @@ input[type=file]::file-selector-button {
     margin-right: 8px;
 }
 
+.drop-zone {
+    border: 2px dashed var(--border-hi);
+    border-radius: 6px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--muted);
+    transition: border-color 0.15s, background 0.15s;
+    user-select: none;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+}
+.image-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+}
+.image-file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--text);
+    font-family: 'Courier New', Courier, monospace;
+}
+.image-file-item button {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    padding: 0 2px;
+    flex-shrink: 0;
+}
+
 .size-val {
     min-width: 28px;
     text-align: right;
@@ -902,8 +947,10 @@ input[type=file]::file-selector-button {
           </div>
           <!-- Images -->
           <div class="field">
-            <label for="images">Images (--image)</label>
-            <input type="file" id="images" name="images[]" accept="image/*" multiple>
+            <label>Images (--image)</label>
+            <input type="file" id="images-picker" accept="image/*" multiple style="display:none">
+            <div class="drop-zone" id="image-drop-zone">Drop images here or click to select</div>
+            <div class="image-file-list" id="image-file-list"></div>
             <div class="toggle-row" style="margin-top:4px">
               <div class="field">
                 <label class="toggle-label">
@@ -1136,6 +1183,53 @@ function syncNativeFont(ttfId, ctrlId, hintId) {
     syncNativeFont(ttfId, ctrlId, hintId);
 });
 
+// ── Image drop zone ──────────────────────────────────────────────
+let imageFiles = [];
+
+function renderImageList() {
+    const list = document.getElementById('image-file-list');
+    list.innerHTML = '';
+    imageFiles.forEach((f, i) => {
+        const item = document.createElement('div');
+        item.className = 'image-file-item';
+        const name = document.createElement('span');
+        name.textContent = f.name;
+        const btn = document.createElement('button');
+        btn.textContent = '✕';
+        btn.title = 'Remove';
+        btn.addEventListener('click', () => {
+            imageFiles.splice(i, 1);
+            renderImageList();
+            updatePreview();
+        });
+        item.append(name, btn);
+        list.appendChild(item);
+    });
+    updatePreview();
+}
+
+function addImageFiles(files) {
+    Array.from(files).forEach(f => {
+        if (f.type.startsWith('image/') && !imageFiles.some(e => e.name === f.name && e.size === f.size))
+            imageFiles.push(f);
+    });
+    renderImageList();
+}
+
+const dropZone = document.getElementById('image-drop-zone');
+const picker   = document.getElementById('images-picker');
+
+dropZone.addEventListener('click', () => picker.click());
+picker.addEventListener('change', () => { addImageFiles(picker.files); picker.value = ''; });
+
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', e => { if (!dropZone.contains(e.relatedTarget)) dropZone.classList.remove('drag-over'); });
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    addImageFiles(e.dataTransfer.files);
+});
+
 // ── Logo size slider max tracks printer pixel width ───────────────
 document.getElementById('pixwidth').addEventListener('change', function() {
     const slider = document.getElementById('logosize');
@@ -1192,7 +1286,7 @@ function buildCmdPreview() {
     const imagesep  = document.getElementById('imagesep').checked;
     const imagename = document.getElementById('imagename').checked;
     const logoFile  = document.getElementById('logo').files[0];
-    const imgFiles  = Array.from(document.getElementById('images').files);
+    const imgFiles  = imageFiles;
 
     let cmd = '/usr/bin/python3 /opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print';
     cmd += ' -d '      + shellArg(dest);
@@ -1358,8 +1452,7 @@ document.getElementById('print-btn').addEventListener('click', async function ()
         Object.entries(data).forEach(([k, v]) => fd.append(k, v));
         const logoInput = document.getElementById('logo');
         if (logoInput.files[0]) fd.append('logo', logoInput.files[0]);
-        Array.from(document.getElementById('images').files)
-            .forEach(f => fd.append('images[]', f));
+        imageFiles.forEach(f => fd.append('images[]', f));
 
         const res = await fetch('print.php', { method: 'POST', body: fd });
         if (!res.ok) throw new Error('HTTP ' + res.status);

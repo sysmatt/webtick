@@ -391,9 +391,43 @@ input[type=number] { width: 100%; }
     border: none;
 }
 
+.size-control.native {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.native-hint {
+    display: none;
+    font-size: 11px;
+    color: var(--amber);
+    font-style: italic;
+}
+
+input[type=file] {
+    width: 100%;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+input[type=file]::file-selector-button {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-hi);
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 8px;
+}
+
 .size-val {
-    width: 24px;
-    text-align: center;
+    min-width: 28px;
+    text-align: right;
     font-weight: 600;
     color: var(--accent);
     font-size: 13px;
@@ -794,11 +828,12 @@ input[type=number] { width: 100%; }
           <div class="field">
             <div class="field-label-row">
               <label for="header">Header <span style="font-weight:400;text-transform:none">(super-header above title)</span></label>
-              <div class="size-control">
+              <div class="size-control" id="hsize-ctrl">
                 <input type="range" id="hsize" name="hsize" min="1" max="60" value="4">
                 <span class="size-val" id="hsize-val">4</span>
               </div>
             </div>
+            <span class="native-hint" id="hsize-hint">Size ignored with native ESC/POS font</span>
             <select id="headerttf" name="headerttf">
               <?php foreach ($font_options as $k => $v): ?>
               <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
@@ -809,11 +844,12 @@ input[type=number] { width: 100%; }
           <div class="field">
             <div class="field-label-row">
               <label for="title">Title</label>
-              <div class="size-control">
+              <div class="size-control" id="tsize-ctrl">
                 <input type="range" id="tsize" name="tsize" min="1" max="60" value="2">
                 <span class="size-val" id="tsize-val">2</span>
               </div>
             </div>
+            <span class="native-hint" id="tsize-hint">Size ignored with native ESC/POS font</span>
             <select id="titlettf" name="titlettf">
               <?php foreach ($font_options as $k => $v): ?>
               <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
@@ -824,11 +860,12 @@ input[type=number] { width: 100%; }
           <div class="field">
             <div class="field-label-row">
               <label for="body">Body</label>
-              <div class="size-control">
+              <div class="size-control" id="size-ctrl">
                 <input type="range" id="size" name="size" min="1" max="60" value="1">
                 <span class="size-val" id="size-val">1</span>
               </div>
             </div>
+            <span class="native-hint" id="size-hint">Size ignored with native ESC/POS font</span>
             <select id="bodyttf" name="bodyttf">
               <?php foreach ($font_options as $k => $v): ?>
               <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
@@ -850,6 +887,38 @@ input[type=number] { width: 100%; }
                 </div>
               </div>
               <input type="text" id="qrdata" name="qrdata" placeholder="URL or text" autocomplete="off">
+            </div>
+          </div>
+          <!-- Logo -->
+          <div class="field">
+            <div class="field-label-row">
+              <label for="logo">Logo Image</label>
+              <div class="size-control">
+                <input type="range" id="logosize" name="logosize" min="16" max="576" value="300">
+                <span class="size-val" id="logosize-val">300</span>
+              </div>
+            </div>
+            <input type="file" id="logo" name="logo" accept="image/*">
+          </div>
+          <!-- Images -->
+          <div class="field">
+            <label for="images">Images (--image)</label>
+            <input type="file" id="images" name="images[]" accept="image/*" multiple>
+            <div class="toggle-row" style="margin-top:4px">
+              <div class="field">
+                <label class="toggle-label">
+                  <input type="checkbox" id="imagesep" name="imagesep">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">--imagesep</span>
+                </label>
+              </div>
+              <div class="field">
+                <label class="toggle-label">
+                  <input type="checkbox" id="imagename" name="imagename">
+                  <span class="toggle-switch"></span>
+                  <span class="toggle-text">--imagename</span>
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -1041,12 +1110,41 @@ document.querySelectorAll('.section-header').forEach(hdr => {
 });
 
 // ── Slider value display ─────────────────────────────────────────
-['hsize', 'tsize', 'size', 'eject', 'qrsize'].forEach(id => {
+['hsize', 'tsize', 'size', 'eject', 'qrsize', 'logosize'].forEach(id => {
     const el = document.getElementById(id);
     const val = document.getElementById(id + '-val');
     if (el && val) {
         el.addEventListener('input', () => { val.textContent = el.value; });
     }
+});
+
+// ── Native font — gray out size slider ───────────────────────────
+function syncNativeFont(ttfId, ctrlId, hintId) {
+    const isNative = document.getElementById(ttfId).value === '';
+    document.getElementById(ctrlId).classList.toggle('native', isNative);
+    document.getElementById(hintId).style.display = isNative ? '' : 'none';
+}
+[
+    ['headerttf', 'hsize-ctrl', 'hsize-hint'],
+    ['titlettf',  'tsize-ctrl', 'tsize-hint'],
+    ['bodyttf',   'size-ctrl',  'size-hint'],
+].forEach(([ttfId, ctrlId, hintId]) => {
+    document.getElementById(ttfId).addEventListener('change', () => {
+        syncNativeFont(ttfId, ctrlId, hintId);
+        updatePreview();
+    });
+    syncNativeFont(ttfId, ctrlId, hintId);
+});
+
+// ── Logo size slider max tracks printer pixel width ───────────────
+document.getElementById('pixwidth').addEventListener('change', function() {
+    const slider = document.getElementById('logosize');
+    slider.max = this.value;
+    if (parseInt(slider.value) > parseInt(this.value)) {
+        slider.value = this.value;
+        document.getElementById('logosize-val').textContent = this.value;
+    }
+    updatePreview();
 });
 
 // ── Command preview ──────────────────────────────────────────────
@@ -1080,6 +1178,7 @@ function buildCmdPreview() {
     const hsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('hsize').value) || 4));
     const eject     = Math.max(0, Math.min(20, parseInt(document.getElementById('eject').value) || 3));
     const qrsize    = Math.max(1, Math.min(16, parseInt(document.getElementById('qrsize').value) || 6));
+    const logosize  = parseInt(document.getElementById('logosize').value) || 300;
     const pixwidth  = document.getElementById('pixwidth').value;
     const impl      = document.getElementById('impl').value;
     const bodyttf   = FONT_MAP_TTF[document.getElementById('bodyttf').value]   || '';
@@ -1090,18 +1189,26 @@ function buildCmdPreview() {
     const center    = document.getElementById('center').checked;
     const landscape = document.getElementById('landscape').checked;
     const ntr       = document.getElementById('new_text_render').checked;
+    const imagesep  = document.getElementById('imagesep').checked;
+    const imagename = document.getElementById('imagename').checked;
+    const logoFile  = document.getElementById('logo').files[0];
+    const imgFiles  = Array.from(document.getElementById('images').files);
 
     let cmd = '/usr/bin/python3 /opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print';
     cmd += ' -d '      + shellArg(dest);
-    cmd += ' -S '      + size;
-    cmd += ' -T '      + tsize;
-    cmd += ' --hsize ' + hsize;
+    if (bodyttf)   cmd += ' -S '      + size;
+    if (titlettf)  cmd += ' -T '      + tsize;
+    if (headerttf) cmd += ' --hsize ' + hsize;
     cmd += ' -e '      + eject;
     cmd += ' -P '      + pixwidth;
     cmd += ' --impl '  + shellArg(impl);
     if (header)    cmd += ' --header '    + shellArg(header);
     if (trailer)   cmd += ' --trailer '   + shellArg(trailer);
     if (qrdata)    cmd += ' --qrdata '    + shellArg(qrdata) + ' --qrsize ' + qrsize;
+    if (logoFile)  cmd += ' --logo '      + shellArg(logoFile.name) + ' --logosize ' + logosize;
+    imgFiles.forEach(f => { cmd += ' --image ' + shellArg(f.name); });
+    if (imagesep)  cmd += ' --imagesep';
+    if (imagename) cmd += ' --imagename';
     if (bodyttf)   cmd += ' --bodyttf '   + shellArg(bodyttf);
     if (headerttf) cmd += ' --headerttf ' + shellArg(headerttf);
     if (titlettf)  cmd += ' --titlettf '  + shellArg(titlettf);
@@ -1222,13 +1329,12 @@ window.addEventListener('DOMContentLoaded', () => {
 
 // ── Print / AJAX submit ──────────────────────────────────────────
 document.getElementById('print-btn').addEventListener('click', async function () {
-    const form = document.createElement('form');
     const fields = [
         'title','header','body','trailer','qrdata',
-        'hsize','tsize','size','eject','qrsize','pixwidth','impl',
+        'hsize','tsize','size','eject','qrsize','logosize','pixwidth','impl',
         'dest','headerttf','titlettf','bodyttf'
     ];
-    const toggles = ['center','cut','beep','landscape','new_text_render'];
+    const toggles = ['center','cut','beep','landscape','new_text_render','imagesep','imagename'];
     const data = {};
     fields.forEach(id => {
         const el = document.getElementById(id);
@@ -1250,6 +1356,10 @@ document.getElementById('print-btn').addEventListener('click', async function ()
     try {
         const fd = new FormData();
         Object.entries(data).forEach(([k, v]) => fd.append(k, v));
+        const logoInput = document.getElementById('logo');
+        if (logoInput.files[0]) fd.append('logo', logoInput.files[0]);
+        Array.from(document.getElementById('images').files)
+            .forEach(f => fd.append('images[]', f));
 
         const res = await fetch('print.php', { method: 'POST', body: fd });
         if (!res.ok) throw new Error('HTTP ' + res.status);

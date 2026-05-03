@@ -55,10 +55,14 @@ $beep           = !empty($_POST['beep']);
 $center         = !empty($_POST['center']);
 $landscape      = !empty($_POST['landscape']);
 $new_text_render= !empty($_POST['new_text_render']);
+$imagesep       = !empty($_POST['imagesep']);
+$imagename      = !empty($_POST['imagename']);
 
 $bodyttf   = FONT_MAP[$_POST['bodyttf']   ?? ''] ?? '';
 $headerttf = FONT_MAP[$_POST['headerttf'] ?? ''] ?? '';
 $titlettf  = FONT_MAP[$_POST['titlettf']  ?? ''] ?? '';
+
+$logosize = max(16, min(832, (int)($_POST['logosize'] ?? 300)));
 
 // Basic sanity check on printer destination (alphanumeric, _, -, .)
 if (!preg_match('/^[a-zA-Z0-9_\-.]+$/', $dest)) {
@@ -66,12 +70,42 @@ if (!preg_match('/^[a-zA-Z0-9_\-.]+$/', $dest)) {
     exit;
 }
 
+// ── Handle uploaded files ────────────────────────────────────────
+$tmp_files = [];
+
+function save_upload(array $file): string {
+    if ($file['error'] !== UPLOAD_ERR_OK || empty($file['tmp_name'])) return '';
+    if (!getimagesize($file['tmp_name'])) return '';
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    $allowed_ext = ['png','jpg','jpeg','gif','bmp','webp'];
+    if (!in_array($ext, $allowed_ext)) return '';
+    $path = sys_get_temp_dir() . '/webtick_' . uniqid() . '.' . $ext;
+    return move_uploaded_file($file['tmp_name'], $path) ? $path : '';
+}
+
+$logo_path = '';
+if (!empty($_FILES['logo']['tmp_name'])) {
+    $logo_path = save_upload($_FILES['logo']);
+    if ($logo_path) $tmp_files[] = $logo_path;
+}
+
+$image_paths = [];
+if (!empty($_FILES['images']['tmp_name'])) {
+    foreach ($_FILES['images']['tmp_name'] as $i => $tmp_name) {
+        $entry = ['name' => $_FILES['images']['name'][$i],
+                  'tmp_name' => $tmp_name,
+                  'error' => $_FILES['images']['error'][$i]];
+        $p = save_upload($entry);
+        if ($p) { $image_paths[] = $p; $tmp_files[] = $p; }
+    }
+}
+
 // ── Build command ────────────────────────────────────────────────
 $cmd  = escapeshellarg(TOOL_PYTHON) . ' ' . escapeshellarg(TOOL_SCRIPT);
 $cmd .= ' -d ' . escapeshellarg($dest);
-$cmd .= ' -S ' . $size;
-$cmd .= ' -T ' . $tsize;
-$cmd .= ' --hsize ' . $hsize;
+if ($bodyttf   !== '') $cmd .= ' -S '      . $size;
+if ($titlettf  !== '') $cmd .= ' -T '      . $tsize;
+if ($headerttf !== '') $cmd .= ' --hsize ' . $hsize;
 $cmd .= ' -e ' . $eject;
 $cmd .= ' -P ' . $pixwidth;
 $cmd .= ' --impl ' . escapeshellarg($impl);
@@ -79,6 +113,11 @@ $cmd .= ' --impl ' . escapeshellarg($impl);
 if ($header  !== '') $cmd .= ' --header '  . escapeshellarg($header);
 if ($trailer !== '') $cmd .= ' --trailer ' . escapeshellarg($trailer);
 if ($qrdata  !== '') $cmd .= ' --qrdata '  . escapeshellarg($qrdata) . ' --qrsize ' . $qrsize;
+
+if ($logo_path !== '') $cmd .= ' --logo ' . escapeshellarg($logo_path) . ' --logosize ' . $logosize;
+foreach ($image_paths as $p) $cmd .= ' --image ' . escapeshellarg($p);
+if ($imagesep)  $cmd .= ' --imagesep';
+if ($imagename) $cmd .= ' --imagename';
 
 if ($bodyttf   !== '') $cmd .= ' --bodyttf '   . escapeshellarg($bodyttf);
 if ($headerttf !== '') $cmd .= ' --headerttf ' . escapeshellarg($headerttf);
@@ -115,6 +154,8 @@ fclose($pipes[1]);
 fclose($pipes[2]);
 
 $exit_code = proc_close($process);
+
+foreach ($tmp_files as $f) @unlink($f);
 
 // ── Respond ──────────────────────────────────────────────────────
 $resp = [

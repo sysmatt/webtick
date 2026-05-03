@@ -219,7 +219,16 @@ html, body {
 }
 
 /* ── Fields ─────────────────────────────────────────────────── */
-.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 5px; }
+
+.field-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.field-label-row label { margin: 0; }
+.field-label-row .size-control { width: 140px; flex-shrink: 0; }
 
 .field label {
     font-size: 12px;
@@ -736,15 +745,33 @@ input[type=number] { width: 100%; }
         </div>
         <div class="section-body" id="s-content">
           <div class="field">
-            <label for="title">Title</label>
-            <input type="text" id="title" name="title" placeholder="Ticket" autocomplete="off">
-          </div>
-          <div class="field">
-            <label for="header">Header <span style="font-weight:400;text-transform:none">(super-header above title)</span></label>
+            <div class="field-label-row">
+              <label for="header">Header <span style="font-weight:400;text-transform:none">(super-header above title)</span></label>
+              <div class="size-control">
+                <input type="range" id="hsize" name="hsize" min="1" max="60" value="4">
+                <span class="size-val" id="hsize-val">4</span>
+              </div>
+            </div>
             <input type="text" id="header" name="header" placeholder="Optional — e.g. ACME CORP" autocomplete="off">
           </div>
           <div class="field">
-            <label for="body">Body</label>
+            <div class="field-label-row">
+              <label for="title">Title</label>
+              <div class="size-control">
+                <input type="range" id="tsize" name="tsize" min="1" max="60" value="2">
+                <span class="size-val" id="tsize-val">2</span>
+              </div>
+            </div>
+            <input type="text" id="title" name="title" placeholder="Ticket" autocomplete="off">
+          </div>
+          <div class="field">
+            <div class="field-label-row">
+              <label for="body">Body</label>
+              <div class="size-control">
+                <input type="range" id="size" name="size" min="1" max="60" value="1">
+                <span class="size-val" id="size-val">1</span>
+              </div>
+            </div>
             <textarea id="body" name="body" rows="5" placeholder="Body text (each line printed separately)…"></textarea>
           </div>
           <div class="field-2col">
@@ -767,29 +794,6 @@ input[type=number] { width: 100%; }
           <span class="section-chevron">▼</span>
         </div>
         <div class="section-body" id="s-typo">
-          <div class="field-row">
-            <div class="field">
-              <label>Header Size</label>
-              <div class="size-control">
-                <input type="range" id="hsize" name="hsize" min="1" max="60" value="4">
-                <span class="size-val" id="hsize-val">4</span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Title Size</label>
-              <div class="size-control">
-                <input type="range" id="tsize" name="tsize" min="1" max="60" value="2">
-                <span class="size-val" id="tsize-val">2</span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Body Size</label>
-              <div class="size-control">
-                <input type="range" id="size" name="size" min="1" max="60" value="1">
-                <span class="size-val" id="size-val">1</span>
-              </div>
-            </div>
-          </div>
           <div class="field">
             <label class="toggle-label">
               <input type="checkbox" id="center" name="center">

@@ -1205,7 +1205,7 @@ function buildCmdPreview() {
     if (header)    cmd += ' --header '    + shellArg(header);
     if (trailer)   cmd += ' --trailer '   + shellArg(trailer);
     if (qrdata)    cmd += ' --qrdata '    + shellArg(qrdata) + ' --qrsize ' + qrsize;
-    if (logoFile)  cmd += ' --logo '      + shellArg(logoFile.name) + ' --logosize ' + logosize;
+    if (logoFile)  cmd += ' --logo '      + shellArg(logoFile.name) + ' --logomax ' + logosize;
     imgFiles.forEach(f => { cmd += ' --image ' + shellArg(f.name); });
     if (imagesep)  cmd += ' --imagesep';
     if (imagename) cmd += ' --imagename';

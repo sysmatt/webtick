@@ -114,7 +114,7 @@ if ($header  !== '') $cmd .= ' --header '  . escapeshellarg($header);
 if ($trailer !== '') $cmd .= ' --trailer ' . escapeshellarg($trailer);
 if ($qrdata  !== '') $cmd .= ' --qrdata '  . escapeshellarg($qrdata) . ' --qrsize ' . $qrsize;
 
-if ($logo_path !== '') $cmd .= ' --logo ' . escapeshellarg($logo_path) . ' --logosize ' . $logosize;
+if ($logo_path !== '') $cmd .= ' --logo ' . escapeshellarg($logo_path) . ' --logomax ' . $logosize;
 foreach ($image_paths as $p) $cmd .= ' --image ' . escapeshellarg($p);
 if ($imagesep)  $cmd .= ' --imagesep';
 if ($imagename) $cmd .= ' --imagename';

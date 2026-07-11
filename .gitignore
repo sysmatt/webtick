@@ -1,0 +1,10 @@
+# Local config should live at ../webtick.ini (outside this repo), but
+# ignore it here too in case it ever ends up inside the project dir.
+webtick.ini
+
+# OS / editor cruft
+.DS_Store
+*.swp
+*.swo
+*~
+.claude

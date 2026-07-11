@@ -1,4 +1,7 @@
 <?php
+require_once __DIR__ . '/lib/config.php';
+$config = webtick_load_config();
+
 // Dynamically fetch CUPS printers
 $printers = [];
 exec('lpstat -a 2>/dev/null', $lp_out);
@@ -11,17 +14,30 @@ if (empty($printers)) {
     $printers = ['citizen-raw'];
 }
 
-$font_options = [
-    ''                    => '— Native ESC/POS —',
-    'liberation-sans'     => 'Liberation Sans',
-    'liberation-sans-bold'=> 'Liberation Sans Bold',
-    'liberation-mono'     => 'Liberation Mono',
-    'liberation-mono-bold'=> 'Liberation Mono Bold',
-    'liberation-serif'    => 'Liberation Serif',
-    'liberation-serif-bold'=>'Liberation Serif Bold',
-    'ubuntu'              => 'Ubuntu',
-    'ubuntu-bold'         => 'Ubuntu Bold',
-    'ubuntu-mono'         => 'Ubuntu Mono',
+// Preselect the configured default queue if present, else the first
+// queue with "citizen" in its name, else the first queue.
+$default_printer = in_array($config['printer']['default_queue'], $printers, true)
+    ? $config['printer']['default_queue'] : null;
+if ($default_printer === null) {
+    foreach ($printers as $p) {
+        if (stripos($p, 'citizen') !== false) { $default_printer = $p; break; }
+    }
+}
+if ($default_printer === null) {
+    $default_printer = $printers[0];
+}
+
+// Font dropdown labels are derived from the config key
+// ("liberation-sans-bold" -> "Liberation Sans Bold").
+$font_options = ['' => '— Native ESC/POS —'];
+foreach ($config['fonts'] as $key => $path) {
+    $font_options[$key] = ucwords(str_replace('-', ' ', $key));
+}
+
+$pixel_width_labels = [
+    384 => '384 px (58 mm generic)',
+    576 => '576 px (CT-S310 / 80 mm)',
+    832 => '832 px (4-inch)',
 ];
 ?><!DOCTYPE html>
 <html lang="en">
@@ -880,8 +896,10 @@ input[type=file]::file-selector-button {
             </div>
             <span class="native-hint" id="hsize-hint">Size ignored with native ESC/POS font</span>
             <select id="headerttf" name="headerttf">
-              <?php foreach ($font_options as $k => $v): ?>
-              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
+              <?php foreach ($font_options as $k => $v):
+                $sel = ($k === $config['font_defaults']['header']) ? ' selected' : '';
+              ?>
+              <option value="<?= htmlspecialchars($k) ?>"<?= $sel ?>><?= htmlspecialchars($v) ?></option>
               <?php endforeach; ?>
             </select>
             <input type="text" id="header" name="header" placeholder="Optional — e.g. ACME CORP" autocomplete="off">
@@ -896,8 +914,10 @@ input[type=file]::file-selector-button {
             </div>
             <span class="native-hint" id="tsize-hint">Size ignored with native ESC/POS font</span>
             <select id="titlettf" name="titlettf">
-              <?php foreach ($font_options as $k => $v): ?>
-              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
+              <?php foreach ($font_options as $k => $v):
+                $sel = ($k === $config['font_defaults']['title']) ? ' selected' : '';
+              ?>
+              <option value="<?= htmlspecialchars($k) ?>"<?= $sel ?>><?= htmlspecialchars($v) ?></option>
               <?php endforeach; ?>
             </select>
             <input type="text" id="title" name="title" placeholder="Ticket" autocomplete="off">
@@ -912,8 +932,10 @@ input[type=file]::file-selector-button {
             </div>
             <span class="native-hint" id="size-hint">Size ignored with native ESC/POS font</span>
             <select id="bodyttf" name="bodyttf">
-              <?php foreach ($font_options as $k => $v): ?>
-              <option value="<?= htmlspecialchars($k) ?>"><?= htmlspecialchars($v) ?></option>
+              <?php foreach ($font_options as $k => $v):
+                $sel = ($k === $config['font_defaults']['body']) ? ' selected' : '';
+              ?>
+              <option value="<?= htmlspecialchars($k) ?>"<?= $sel ?>><?= htmlspecialchars($v) ?></option>
               <?php endforeach; ?>
             </select>
             <textarea id="body" name="body" rows="5" placeholder="Body text (each line printed separately)…"></textarea>
@@ -939,7 +961,7 @@ input[type=file]::file-selector-button {
             <div class="field-label-row">
               <label for="logo">Logo Image</label>
               <div class="size-control">
-                <input type="range" id="logosize" name="logosize" min="16" max="576" value="300">
+                <input type="range" id="logosize" name="logosize" min="16" max="<?= (int)$config['printer']['default_width'] ?>" value="300">
                 <span class="size-val" id="logosize-val">300</span>
               </div>
             </div>
@@ -987,7 +1009,7 @@ input[type=file]::file-selector-button {
           </div>
           <div class="field">
             <label class="toggle-label">
-              <input type="checkbox" id="new_text_render" name="new_text_render">
+              <input type="checkbox" id="new_text_render" name="new_text_render"<?= $config['rendering']['new_text_render'] ? ' checked' : '' ?>>
               <span class="toggle-switch"></span>
               <span class="toggle-text">Use new TTF renderer (Pillow textbbox)</span>
             </label>
@@ -1007,7 +1029,7 @@ input[type=file]::file-selector-button {
             <label for="dest">Printer Destination</label>
             <select id="dest" name="dest">
               <?php foreach ($printers as $p):
-                $sel = (strpos($p, 'CITIZEN') !== false || strpos($p, 'citizen') !== false) ? ' selected' : '';
+                $sel = ($p === $default_printer) ? ' selected' : '';
               ?>
               <option value="<?= htmlspecialchars($p) ?>"<?= $sel ?>><?= htmlspecialchars($p) ?></option>
               <?php endforeach; ?>
@@ -1017,17 +1039,22 @@ input[type=file]::file-selector-button {
             <div class="field">
               <label for="pixwidth">Pixel Width</label>
               <select id="pixwidth" name="pixwidth">
-                <option value="576" selected>576 px (CT-S310 / 80 mm)</option>
-                <option value="384">384 px (58 mm generic)</option>
-                <option value="832">832 px (4-inch)</option>
+                <?php foreach ($config['printer']['widths'] as $w):
+                  $sel = ($w === $config['printer']['default_width']) ? ' selected' : '';
+                  $label = $pixel_width_labels[$w] ?? ($w . ' px');
+                ?>
+                <option value="<?= (int)$w ?>"<?= $sel ?>><?= htmlspecialchars($label) ?></option>
+                <?php endforeach; ?>
               </select>
             </div>
             <div class="field">
               <label for="impl">Graphics Impl</label>
               <select id="impl" name="impl">
-                <option value="bitImageRaster" selected>bitImageRaster</option>
-                <option value="graphics">graphics</option>
-                <option value="bitImageColumn">bitImageColumn</option>
+                <?php foreach ($config['printer']['impls'] as $i):
+                  $sel = ($i === $config['printer']['default_impl']) ? ' selected' : '';
+                ?>
+                <option value="<?= htmlspecialchars($i) ?>"<?= $sel ?>><?= htmlspecialchars($i) ?></option>
+                <?php endforeach; ?>
               </select>
             </div>
           </div>
@@ -1051,14 +1078,14 @@ input[type=file]::file-selector-button {
           <div class="toggle-row">
             <div class="field">
               <label class="toggle-label">
-                <input type="checkbox" id="cut" name="cut" checked>
+                <input type="checkbox" id="cut" name="cut"<?= $config['printer']['default_cut'] ? ' checked' : '' ?>>
                 <span class="toggle-switch"></span>
                 <span class="toggle-text">Cut paper</span>
               </label>
             </div>
             <div class="field">
               <label class="toggle-label">
-                <input type="checkbox" id="beep" name="beep">
+                <input type="checkbox" id="beep" name="beep"<?= $config['printer']['default_beep'] ? ' checked' : '' ?>>
                 <span class="toggle-switch"></span>
                 <span class="toggle-text">Beep</span>
               </label>
@@ -1242,18 +1269,9 @@ document.getElementById('pixwidth').addEventListener('change', function() {
 });
 
 // ── Command preview ──────────────────────────────────────────────
-const FONT_MAP_TTF = {
-    '':                      '',
-    'liberation-sans':       '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-    'liberation-sans-bold':  '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-    'liberation-mono':       '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf',
-    'liberation-mono-bold':  '/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf',
-    'liberation-serif':      '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
-    'liberation-serif-bold': '/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf',
-    'ubuntu':                '/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf',
-    'ubuntu-bold':           '/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf',
-    'ubuntu-mono':           '/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf',
-};
+const FONT_MAP_TTF = <?= json_encode($config['fonts'] + ['' => '']) ?>;
+const TOOL_PYTHON   = <?= json_encode($config['tool']['python_bin']) ?>;
+const TOOL_SCRIPT   = <?= json_encode($config['tool']['script_path']) ?>;
 
 function shellArg(s) {
     s = String(s);
@@ -1288,7 +1306,7 @@ function buildCmdPreview() {
     const logoFile  = document.getElementById('logo').files[0];
     const imgFiles  = imageFiles;
 
-    let cmd = '/usr/bin/python3 /opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print';
+    let cmd = TOOL_PYTHON + ' ' + TOOL_SCRIPT;
     cmd += ' -d '      + shellArg(dest);
     if (bodyttf)   cmd += ' -S '      + size;
     if (titlettf)  cmd += ' -T '      + tsize;

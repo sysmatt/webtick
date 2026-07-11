@@ -1,0 +1,76 @@
+; WebTick configuration
+;
+; Copy this file to ../webtick.ini relative to the webtick project root
+; (i.e. one directory ABOVE this repo, outside the web document root) and
+; edit it for your deployment:
+;
+;   /var/www/webtick.ini          <- this file, renamed
+;   /var/www/webtick/index.php
+;   /var/www/webtick/print.php
+;
+; Any setting you omit falls back to WebTick's built-in default, so you
+; only need to override what's different for your printer/host.
+
+[tool]
+; Python interpreter used to run the ticket-print tool. Point this at a
+; venv if the tool needs one, e.g. /opt/webtick/.venv/bin/python
+python_bin  = /usr/bin/python3
+
+; Path to the sysmatt.escpos.ticket.print script.
+script_path = /opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print
+
+[printer]
+; CUPS queue name to preselect in the UI. If it isn't among the queues
+; reported by `lpstat -a`, WebTick falls back to the first queue whose
+; name contains "citizen", then to the first queue in the list.
+default_queue = CITIZEN_CT_S310_clocky4
+
+; Comma-separated list of pixel widths offered in the "Pixel Width"
+; dropdown. Common values: 384 (58mm generic), 576 (80mm / CT-S310),
+; 832 (4-inch).
+widths        = 384,576,832
+
+; Which of the widths above is preselected.
+default_width = 576
+
+; Comma-separated list of graphics implementations offered in the
+; "Graphics Impl" dropdown (must be implementations the print tool
+; actually supports: bitImageRaster, graphics, bitImageColumn).
+impls         = bitImageRaster,graphics,bitImageColumn
+
+; Which of the impls above is preselected.
+default_impl  = bitImageRaster
+
+; Initial state of the "Cut paper" / "Beep" toggles.
+default_cut   = true
+default_beep  = false
+
+[rendering]
+; Preselect the new Pillow textbbox-based text renderer instead of the
+; legacy renderer.
+new_text_render = false
+
+[fonts]
+; TTF font key -> path, used to populate the Header/Title/Body font
+; dropdowns and passed to --headerttf/--titlettf/--bodyttf. The label
+; shown in the UI is auto-generated from the key (dashes become spaces,
+; title-cased), so "liberation-sans-bold" displays as "Liberation Sans
+; Bold". Add or remove entries freely; you are not limited to the
+; defaults below.
+liberation-sans        = /usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf
+liberation-sans-bold   = /usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf
+liberation-sans-italic = /usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf
+liberation-mono        = /usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf
+liberation-mono-bold   = /usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf
+liberation-serif       = /usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf
+liberation-serif-bold  = /usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf
+ubuntu                 = /usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf
+ubuntu-bold             = /usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf
+ubuntu-mono             = /usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf
+
+[font_defaults]
+; Which [fonts] key (or blank for native ESC/POS) is preselected for
+; each field.
+header =
+title  =
+body   =

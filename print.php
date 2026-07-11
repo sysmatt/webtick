@@ -7,33 +7,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-#define('TOOL_PYTHON', '/home/sysmatt/Documents/workspace/sysmatt.escpos.ticket.print/.venv/bin/python');
-define('TOOL_PYTHON', '/usr/bin/python3');
-#define('TOOL_SCRIPT', '/home/sysmatt/Documents/workspace/sysmatt.escpos.ticket.print/sysmatt.escpos.ticket.print');
-define('TOOL_SCRIPT', '/opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print');
+require_once __DIR__ . '/lib/config.php';
+$config = webtick_load_config();
+
+define('TOOL_PYTHON', $config['tool']['python_bin']);
+define('TOOL_SCRIPT', $config['tool']['script_path']);
 
 // Whitelisted TTF font paths — no arbitrary user-supplied paths
-const FONT_MAP = [
-    ''                     => '',
-    'liberation-sans'      => '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf',
-    'liberation-sans-bold' => '/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf',
-    'liberation-sans-italic'=> '/usr/share/fonts/truetype/liberation/LiberationSans-Italic.ttf',
-    'liberation-mono'      => '/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf',
-    'liberation-mono-bold' => '/usr/share/fonts/truetype/liberation/LiberationMono-Bold.ttf',
-    'liberation-serif'     => '/usr/share/fonts/truetype/liberation/LiberationSerif-Regular.ttf',
-    'liberation-serif-bold'=> '/usr/share/fonts/truetype/liberation/LiberationSerif-Bold.ttf',
-    'ubuntu'               => '/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf',
-    'ubuntu-bold'          => '/usr/share/fonts/truetype/ubuntu/Ubuntu-B.ttf',
-    'ubuntu-mono'          => '/usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf',
-];
+$FONT_MAP = $config['fonts'] + [''=> ''];
 
-const ALLOWED_IMPLS = ['bitImageRaster', 'graphics', 'bitImageColumn'];
+$ALLOWED_IMPLS = $config['printer']['impls'];
 
 // ── Sanitize inputs ──────────────────────────────────────────────
 $title   = trim($_POST['title'] ?? '') ?: 'Ticket';
 $header  = trim($_POST['header'] ?? '');
 $body    = $_POST['body'] ?? '';
-$dest    = trim($_POST['dest'] ?? 'CITIZEN_CT_S310_clocky4');
+$dest    = trim($_POST['dest'] ?? $config['printer']['default_queue']);
 $trailer = trim($_POST['trailer'] ?? '');
 $qrdata  = trim($_POST['qrdata'] ?? '');
 $qrsize  = max(1, min(16, (int)($_POST['qrsize'] ?? 6)));
@@ -43,12 +32,12 @@ $tsize   = max(1, min(60, (int)($_POST['tsize']   ?? 2)));
 $hsize   = max(1, min(60, (int)($_POST['hsize']   ?? 4)));
 $eject   = max(0, min(20, (int)($_POST['eject']  ?? 3)));
 
-$px_allowed = [384, 576, 832];
-$pixwidth = in_array((int)($_POST['pixwidth'] ?? 576), $px_allowed)
-    ? (int)$_POST['pixwidth'] : 576;
+$px_allowed = $config['printer']['widths'];
+$pixwidth = in_array((int)($_POST['pixwidth'] ?? $config['printer']['default_width']), $px_allowed, true)
+    ? (int)$_POST['pixwidth'] : $config['printer']['default_width'];
 
-$impl = in_array($_POST['impl'] ?? '', ALLOWED_IMPLS)
-    ? $_POST['impl'] : 'bitImageRaster';
+$impl = in_array($_POST['impl'] ?? '', $ALLOWED_IMPLS, true)
+    ? $_POST['impl'] : $config['printer']['default_impl'];
 
 $cut            = !empty($_POST['cut']);
 $beep           = !empty($_POST['beep']);
@@ -58,11 +47,11 @@ $new_text_render= !empty($_POST['new_text_render']);
 $imagesep       = !empty($_POST['imagesep']);
 $imagename      = !empty($_POST['imagename']);
 
-$bodyttf   = FONT_MAP[$_POST['bodyttf']   ?? ''] ?? '';
-$headerttf = FONT_MAP[$_POST['headerttf'] ?? ''] ?? '';
-$titlettf  = FONT_MAP[$_POST['titlettf']  ?? ''] ?? '';
+$bodyttf   = $FONT_MAP[$_POST['bodyttf']   ?? ''] ?? '';
+$headerttf = $FONT_MAP[$_POST['headerttf'] ?? ''] ?? '';
+$titlettf  = $FONT_MAP[$_POST['titlettf']  ?? ''] ?? '';
 
-$logosize = max(16, min(832, (int)($_POST['logosize'] ?? 300)));
+$logosize = max(16, min(max($px_allowed), (int)($_POST['logosize'] ?? 300)));
 
 // Basic sanity check on printer destination (alphanumeric, _, -, .)
 if (!preg_match('/^[a-zA-Z0-9_\-.]+$/', $dest)) {

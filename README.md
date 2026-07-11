@@ -66,6 +66,7 @@ See `webtick.ini.example` for a fully-commented copy of this.
 | `[rendering]` | `new_text_render` | Preselect the new Pillow `textbbox`-based renderer over the legacy one | `false` |
 | `[fonts]` | *(any key)* `= path` | TTF font choices offered for Header/Title/Body. UI label is derived from the key (`liberation-sans-bold` → "Liberation Sans Bold"). Add/remove entries freely | Liberation + Ubuntu families |
 | `[font_defaults]` | `header`, `title`, `body` | Which `[fonts]` key (or blank for native ESC/POS) is preselected for each field | blank (native) |
+| `[font_sizes]` | `{header,title,body}_min` / `_max` / `_default` | Range and default value of each size slider (only meaningful when a TTF font is selected for that field) | header 1–60 (4), title 1–60 (2), body 1–60 (1) |
 
 Only fonts and printer widths/impls listed in `webtick.ini` are ever passed to
 the underlying tool — `print.php` validates every submitted value against

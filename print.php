@@ -27,9 +27,10 @@ $trailer = trim($_POST['trailer'] ?? '');
 $qrdata  = trim($_POST['qrdata'] ?? '');
 $qrsize  = max(1, min(16, (int)($_POST['qrsize'] ?? 6)));
 
-$size    = max(1, min(60, (int)($_POST['size']    ?? 1)));
-$tsize   = max(1, min(60, (int)($_POST['tsize']   ?? 2)));
-$hsize   = max(1, min(60, (int)($_POST['hsize']   ?? 4)));
+$fs = $config['font_sizes'];
+$size    = max($fs['body']['min'],   min($fs['body']['max'],   (int)($_POST['size']  ?? $fs['body']['default'])));
+$tsize   = max($fs['title']['min'],  min($fs['title']['max'],  (int)($_POST['tsize'] ?? $fs['title']['default'])));
+$hsize   = max($fs['header']['min'], min($fs['header']['max'], (int)($_POST['hsize'] ?? $fs['header']['default'])));
 $eject   = max(0, min(20, (int)($_POST['eject']  ?? 3)));
 
 $px_allowed = $config['printer']['widths'];

@@ -49,6 +49,11 @@ function webtick_default_config(): array {
             'title'  => '',
             'body'   => '',
         ],
+        'font_sizes' => [
+            'header' => ['min' => 1, 'max' => 60, 'default' => 4],
+            'title'  => ['min' => 1, 'max' => 60, 'default' => 2],
+            'body'   => ['min' => 1, 'max' => 60, 'default' => 1],
+        ],
     ];
 }
 
@@ -99,6 +104,17 @@ function webtick_load_config(): array {
 
     if (isset($ini['font_defaults']) && is_array($ini['font_defaults'])) {
         $config['font_defaults'] = array_merge($config['font_defaults'], $ini['font_defaults']);
+    }
+
+    if (isset($ini['font_sizes']) && is_array($ini['font_sizes'])) {
+        foreach (['header', 'title', 'body'] as $field) {
+            foreach (['min', 'max', 'default'] as $prop) {
+                $key = $field . '_' . $prop;
+                if (isset($ini['font_sizes'][$key])) {
+                    $config['font_sizes'][$field][$prop] = (int)$ini['font_sizes'][$key];
+                }
+            }
+        }
     }
 
     return $config;

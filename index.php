@@ -150,7 +150,7 @@ html, body {
 /* ── Main Layout ────────────────────────────────────────────── */
 .app-main {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 480px 1fr;
     height: calc(100vh - 56px);
     overflow: hidden;
 }
@@ -244,7 +244,7 @@ html, body {
     gap: 8px;
 }
 .field-label-row label { margin: 0; }
-.field-label-row .size-control { width: 140px; flex-shrink: 0; }
+.field-label-row .size-control { width: 120px; flex-shrink: 0; }
 
 .field label {
     font-size: 12px;
@@ -380,6 +380,7 @@ input[type=number] { width: 100%; }
 
 .size-control input[type=range] {
     flex: 1;
+    min-width: 0;
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
@@ -890,8 +891,8 @@ input[type=file]::file-selector-button {
             <div class="field-label-row">
               <label for="header">Header <span style="font-weight:400;text-transform:none">(super-header above title)</span></label>
               <div class="size-control" id="hsize-ctrl">
-                <input type="range" id="hsize" name="hsize" min="1" max="60" value="4">
-                <span class="size-val" id="hsize-val">4</span>
+                <input type="range" id="hsize" name="hsize" min="<?= (int)$config['font_sizes']['header']['min'] ?>" max="<?= (int)$config['font_sizes']['header']['max'] ?>" value="<?= (int)$config['font_sizes']['header']['default'] ?>">
+                <span class="size-val" id="hsize-val"><?= (int)$config['font_sizes']['header']['default'] ?></span>
               </div>
             </div>
             <span class="native-hint" id="hsize-hint">Size ignored with native ESC/POS font</span>
@@ -908,8 +909,8 @@ input[type=file]::file-selector-button {
             <div class="field-label-row">
               <label for="title">Title</label>
               <div class="size-control" id="tsize-ctrl">
-                <input type="range" id="tsize" name="tsize" min="1" max="60" value="2">
-                <span class="size-val" id="tsize-val">2</span>
+                <input type="range" id="tsize" name="tsize" min="<?= (int)$config['font_sizes']['title']['min'] ?>" max="<?= (int)$config['font_sizes']['title']['max'] ?>" value="<?= (int)$config['font_sizes']['title']['default'] ?>">
+                <span class="size-val" id="tsize-val"><?= (int)$config['font_sizes']['title']['default'] ?></span>
               </div>
             </div>
             <span class="native-hint" id="tsize-hint">Size ignored with native ESC/POS font</span>
@@ -926,8 +927,8 @@ input[type=file]::file-selector-button {
             <div class="field-label-row">
               <label for="body">Body</label>
               <div class="size-control" id="size-ctrl">
-                <input type="range" id="size" name="size" min="1" max="60" value="1">
-                <span class="size-val" id="size-val">1</span>
+                <input type="range" id="size" name="size" min="<?= (int)$config['font_sizes']['body']['min'] ?>" max="<?= (int)$config['font_sizes']['body']['max'] ?>" value="<?= (int)$config['font_sizes']['body']['default'] ?>">
+                <span class="size-val" id="size-val"><?= (int)$config['font_sizes']['body']['default'] ?></span>
               </div>
             </div>
             <span class="native-hint" id="size-hint">Size ignored with native ESC/POS font</span>
@@ -1272,6 +1273,7 @@ document.getElementById('pixwidth').addEventListener('change', function() {
 const FONT_MAP_TTF = <?= json_encode($config['fonts'] + ['' => '']) ?>;
 const TOOL_PYTHON   = <?= json_encode($config['tool']['python_bin']) ?>;
 const TOOL_SCRIPT   = <?= json_encode($config['tool']['script_path']) ?>;
+const SIZE_LIMITS   = <?= json_encode($config['font_sizes']) ?>;
 
 function shellArg(s) {
     s = String(s);
@@ -1285,9 +1287,9 @@ function buildCmdPreview() {
     const trailer   = document.getElementById('trailer').value.trim();
     const qrdata    = document.getElementById('qrdata').value.trim();
     const dest      = document.getElementById('dest').value;
-    const size      = Math.max(1, Math.min(60, parseInt(document.getElementById('size').value)  || 1));
-    const tsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('tsize').value) || 2));
-    const hsize     = Math.max(1, Math.min(60, parseInt(document.getElementById('hsize').value) || 4));
+    const size      = Math.max(SIZE_LIMITS.body.min,   Math.min(SIZE_LIMITS.body.max,   parseInt(document.getElementById('size').value)   || SIZE_LIMITS.body.default));
+    const tsize     = Math.max(SIZE_LIMITS.title.min,  Math.min(SIZE_LIMITS.title.max,  parseInt(document.getElementById('tsize').value)  || SIZE_LIMITS.title.default));
+    const hsize     = Math.max(SIZE_LIMITS.header.min, Math.min(SIZE_LIMITS.header.max, parseInt(document.getElementById('hsize').value)  || SIZE_LIMITS.header.default));
     const eject     = Math.max(0, Math.min(20, parseInt(document.getElementById('eject').value) || 3));
     const qrsize    = Math.max(1, Math.min(16, parseInt(document.getElementById('qrsize').value) || 6));
     const logosize  = parseInt(document.getElementById('logosize').value) || 300;

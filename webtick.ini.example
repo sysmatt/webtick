@@ -74,3 +74,18 @@ ubuntu-mono             = /usr/share/fonts/truetype/ubuntu/UbuntuMono-R.ttf
 header =
 title  =
 body   =
+
+[font_sizes]
+; Min/max/default for the Header/Title/Body size sliders (only used when
+; a TTF font is selected for that field — ignored in native ESC/POS mode).
+header_min     = 1
+header_max     = 60
+header_default = 4
+
+title_min      = 1
+title_max      = 60
+title_default  = 2
+
+body_min       = 1
+body_max       = 60
+body_default   = 1

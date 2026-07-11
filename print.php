@@ -1,4 +1,11 @@
 <?php
+require_once __DIR__ . '/lib/config.php';
+$config = webtick_load_config();
+
+if ($config['auth']['enabled']) {
+    require $config['auth']['simplewebauth_dir'] . '/auth.php';
+}
+
 header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -6,9 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Method not allowed']);
     exit;
 }
-
-require_once __DIR__ . '/lib/config.php';
-$config = webtick_load_config();
 
 define('TOOL_PYTHON', $config['tool']['python_bin']);
 define('TOOL_SCRIPT', $config['tool']['script_path']);

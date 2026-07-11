@@ -89,3 +89,18 @@ title_default  = 2
 body_min       = 1
 body_max       = 60
 body_default   = 1
+
+[auth]
+; Protect index.php and print.php with simplewebauth
+; (https://github.com/sysmatt/simplewebauth or wherever you keep it).
+; Off by default so existing deployments aren't broken by upgrading.
+enabled = false
+
+; Filesystem path to the simplewebauth deployment (the directory
+; containing auth.php, login.php, logout.php, etc). This directory MUST
+; be web-accessible — simplewebauth's login redirect is computed against
+; $_SERVER['DOCUMENT_ROOT'], so it can't live outside the docroot the way
+; this ini file does. Defaults to a "simplewebauth" folder sitting right
+; next to index.php; override if you're sharing one simplewebauth install
+; across several tools on this host.
+;simplewebauth_dir = /var/www/webtick/simplewebauth

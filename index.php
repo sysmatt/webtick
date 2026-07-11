@@ -2,6 +2,19 @@
 require_once __DIR__ . '/lib/config.php';
 $config = webtick_load_config();
 
+if ($config['auth']['enabled']) {
+    require $config['auth']['simplewebauth_dir'] . '/auth.php';
+
+    // Derive a root-relative logout URL from the filesystem path the same
+    // way auth.php derives the login redirect, since simplewebauth_dir is a
+    // filesystem path and may not match the site's URL structure.
+    $docRoot = rtrim($_SERVER['DOCUMENT_ROOT'] ?? '', '/');
+    $authDirReal = realpath($config['auth']['simplewebauth_dir']);
+    $logout_url = ($authDirReal && $docRoot && str_starts_with($authDirReal, $docRoot))
+        ? str_replace($docRoot, '', $authDirReal) . '/logout.php'
+        : rtrim($config['auth']['simplewebauth_dir'], '/') . '/logout.php';
+}
+
 // Dynamically fetch CUPS printers
 $printers = [];
 exec('lpstat -a 2>/dev/null', $lp_out);
@@ -145,6 +158,27 @@ html, body {
     border-radius: 50%;
     background: var(--green);
     box-shadow: 0 0 6px var(--green);
+}
+
+.auth-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.auth-pill a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.auth-pill a:hover {
+    text-decoration: underline;
 }
 
 /* ── Main Layout ────────────────────────────────────────────── */
@@ -874,6 +908,12 @@ input[type=file]::file-selector-button {
     </div>
   </div>
   <div class="header-right">
+    <?php if ($config['auth']['enabled']): ?>
+    <div class="auth-pill">
+      <span><?= htmlspecialchars(auth_user()) ?></span>
+      <a href="<?= htmlspecialchars($logout_url) ?>">Sign out</a>
+    </div>
+    <?php endif; ?>
     <div class="printer-pill">
       <div class="printer-dot" id="printer-dot"></div>
       <span id="active-printer-name">Loading...</span>

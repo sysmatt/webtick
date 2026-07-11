@@ -21,7 +21,7 @@ underlying print call. It's a thin PHP front end over the
 - PHP with `exec()` and `proc_open()` enabled, served by a webserver (Apache, Nginx+PHP-FPM, etc.)
 - CUPS with `lpstat` available on the host, and at least one configured print queue
 - Python 3 with [Pillow](https://pypi.org/project/Pillow/) and the
-  [`sysmatt.escpos.ticket.print`](https://github.com/sysmatt) tool installed
+  `sysmatt.escpos.ticket.print` tool installed
   (referenced via `python_bin` / `script_path` in config — a venv works fine)
 - TrueType fonts on disk for any entries you list under `[fonts]` in `webtick.ini`
 
@@ -67,10 +67,44 @@ See `webtick.ini.example` for a fully-commented copy of this.
 | `[fonts]` | *(any key)* `= path` | TTF font choices offered for Header/Title/Body. UI label is derived from the key (`liberation-sans-bold` → "Liberation Sans Bold"). Add/remove entries freely | Liberation + Ubuntu families |
 | `[font_defaults]` | `header`, `title`, `body` | Which `[fonts]` key (or blank for native ESC/POS) is preselected for each field | blank (native) |
 | `[font_sizes]` | `{header,title,body}_min` / `_max` / `_default` | Range and default value of each size slider (only meaningful when a TTF font is selected for that field) | header 1–60 (4), title 1–60 (2), body 1–60 (1) |
+| `[auth]` | `enabled` | Protect `index.php` and `print.php` with [simplewebauth](#authentication) | `false` |
+| `[auth]` | `simplewebauth_dir` | Filesystem path to the simplewebauth deployment (must be web-accessible — see [Authentication](#authentication)) | `<webtick-root>/simplewebauth` |
 
 Only fonts and printer widths/impls listed in `webtick.ini` are ever passed to
 the underlying tool — `print.php` validates every submitted value against
 these configured whitelists before building the command line.
+
+## Authentication
+
+WebTick can be protected with `simplewebauth`, a drop-in session-based login
+for small PHP tools (see its own README for setup/user-management details).
+It's off by default; set `[auth] enabled = true` in `webtick.ini` to turn it on.
+
+**Setup:**
+
+1. Deploy a copy of simplewebauth so it sits next to `index.php` (the default
+   `webtick.ini` expects `<webtick-root>/simplewebauth/`), or point
+   `simplewebauth_dir` at a shared install elsewhere on the host. Either way,
+   **that directory must be web-accessible** — simplewebauth's login redirect
+   is computed against `$_SERVER['DOCUMENT_ROOT']`, so it can't live outside
+   the docroot the way `webtick.ini` itself does.
+2. Follow simplewebauth's own README to add users (`authctl add <username>`)
+   and, if you want, configure Apache/Nginx to block direct access to its
+   management scripts.
+3. Set `[auth] enabled = true` in `webtick.ini`.
+
+Once enabled, both `index.php` and `print.php` require a valid session —
+unauthenticated page loads are redirected to the login page and returned to
+WebTick afterward. The header shows the logged-in username and a sign-out
+link.
+
+**Note on `print.php`:** it's a JSON endpoint called via `fetch()`, not a
+page load. If a session expires mid-use, simplewebauth's default behavior
+(HTTP redirect to the login page) will be silently followed by `fetch()`,
+and the resulting HTML response will fail to parse as JSON — the UI shows a
+generic print-failed error rather than "please log in again." Given
+simplewebauth's 8-hour sliding session, this is rare in practice, and a page
+reload immediately shows the login screen.
 
 ## Usage
 
@@ -107,6 +141,24 @@ webtick.ini.example     Documented config template — copy to ../webtick.ini
 - Uploaded images are validated with `getimagesize()` and an extension
   whitelist before being passed to the print tool, and temp files are deleted
   after each request.
+- As defense in depth, block `*.ini` files at the webserver regardless of
+  where they live — this catches any config accidentally placed inside the
+  docroot (yours or another app's). Nginx:
+
+  ```nginx
+  location ~* \.ini$ {
+      deny all;
+      return 404;
+  }
+  ```
+
+  Apache equivalent, in a `.conf` or `.htaccess`:
+
+  ```apache
+  <FilesMatch "\.ini$">
+      Require all denied
+  </FilesMatch>
+  ```
 
 ## License
 

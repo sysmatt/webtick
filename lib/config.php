@@ -54,6 +54,13 @@ function webtick_default_config(): array {
             'title'  => ['min' => 1, 'max' => 60, 'default' => 2],
             'body'   => ['min' => 1, 'max' => 60, 'default' => 1],
         ],
+        'auth' => [
+            'enabled'           => false,
+            // Must be web-accessible (simplewebauth's login redirect resolves
+            // against $_SERVER['DOCUMENT_ROOT']) — defaults to a sibling of
+            // index.php, matching simplewebauth's own README example layout.
+            'simplewebauth_dir' => dirname(__DIR__) . '/simplewebauth',
+        ],
     ];
 }
 
@@ -115,6 +122,11 @@ function webtick_load_config(): array {
                 }
             }
         }
+    }
+
+    if (isset($ini['auth']) && is_array($ini['auth'])) {
+        $config['auth'] = array_merge($config['auth'], $ini['auth']);
+        $config['auth']['enabled'] = (bool)$config['auth']['enabled'];
     }
 
     return $config;

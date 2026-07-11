@@ -20,10 +20,11 @@ enabled = false
 ; containing auth.php, login.php, logout.php, etc). This directory MUST
 ; be web-accessible — simplewebauth's login redirect is computed against
 ; $_SERVER['DOCUMENT_ROOT'], so it can't live outside the docroot the way
-; this ini file does. Defaults to a "simplewebauth" folder sitting right
-; next to index.php; override if you're sharing one simplewebauth install
-; across several tools on this host.
-;simplewebauth_dir = /var/www/webtick/simplewebauth
+; this ini file does. Defaults to a "simplewebauth" folder that's a sibling
+; of the webtick/ directory itself (e.g. /var/www/html/simplewebauth next
+; to /var/www/html/webtick) — the standard layout for sharing one
+; simplewebauth install across several tools on this host.
+;simplewebauth_dir = /var/www/html/simplewebauth
 
 [tool]
 ; Python interpreter used to run the ticket-print tool. Point this at a

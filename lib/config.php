@@ -58,8 +58,9 @@ function webtick_default_config(): array {
             'enabled'           => false,
             // Must be web-accessible (simplewebauth's login redirect resolves
             // against $_SERVER['DOCUMENT_ROOT']) — defaults to a sibling of
-            // index.php, matching simplewebauth's own README example layout.
-            'simplewebauth_dir' => dirname(__DIR__) . '/simplewebauth',
+            // the webtick/ directory itself (DOCROOT/simplewebauth next to
+            // DOCROOT/webtick), matching the standard deployment layout.
+            'simplewebauth_dir' => dirname(__DIR__, 2) . '/simplewebauth',
         ],
     ];
 }

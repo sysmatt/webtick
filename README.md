@@ -59,7 +59,7 @@ See `webtick.ini.example` for a fully-commented copy of this.
 | Section | Key | Meaning | Default |
 |---|---|---|---|
 | `[auth]` | `enabled` | Protect `index.php` and `print.php` with [simplewebauth](#authentication) | `false` |
-| `[auth]` | `simplewebauth_dir` | Filesystem path to the simplewebauth deployment (must be web-accessible — see [Authentication](#authentication)) | `<webtick-root>/simplewebauth` |
+| `[auth]` | `simplewebauth_dir` | Filesystem path to the simplewebauth deployment (must be web-accessible — see [Authentication](#authentication)) | `<sibling of webtick/>/simplewebauth` |
 | `[tool]` | `python_bin` | Python interpreter used to run the print tool (point at a venv if needed) | `/usr/bin/python3` |
 | `[tool]` | `script_path` | Path to the `sysmatt.escpos.ticket.print` script | `/opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print` |
 | `[printer]` | `default_queue` | CUPS queue preselected in the UI (falls back to a queue name containing "citizen", then the first available queue) | `CITIZEN_CT_S310_clocky4` |
@@ -86,8 +86,9 @@ It's off by default; set `[auth] enabled = true` in `webtick.ini` to turn it on.
 
 **Setup:**
 
-1. Deploy a copy of simplewebauth so it sits next to `index.php` (the default
-   `webtick.ini` expects `<webtick-root>/simplewebauth/`), or point
+1. Deploy a copy of simplewebauth as a sibling of the `webtick/` directory
+   itself — e.g. `/var/www/html/simplewebauth` next to `/var/www/html/webtick`
+   (the default `webtick.ini` expects exactly this layout), or point
    `simplewebauth_dir` at a shared install elsewhere on the host. Either way,
    **that directory must be web-accessible** — simplewebauth's login redirect
    is computed against `$_SERVER['DOCUMENT_ROOT']`, so it can't live outside

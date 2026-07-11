@@ -15,6 +15,7 @@ underlying print call. It's a thin PHP front end over the
 - Configurable pixel width / graphics implementation / cut / beep / font defaults
   per deployment via `webtick.ini` (see [Configuration](#configuration))
 - Shows the exact command that will be run, plus full stdout/stderr after printing
+- Optional session-based login via `simplewebauth` (see [Authentication](#authentication))
 
 ## Requirements
 
@@ -24,6 +25,7 @@ underlying print call. It's a thin PHP front end over the
   `sysmatt.escpos.ticket.print` tool installed
   (referenced via `python_bin` / `script_path` in config — a venv works fine)
 - TrueType fonts on disk for any entries you list under `[fonts]` in `webtick.ini`
+- Optional: a `simplewebauth` deployment if you enable authentication (see [Authentication](#authentication))
 
 ## Installation
 
@@ -42,6 +44,8 @@ underlying print call. It's a thin PHP front end over the
 
 3. Make sure the webserver user can run `lpstat`, the configured `python_bin`,
    and reach the configured printer queue.
+4. (Optional) Set up `simplewebauth` and enable `[auth] enabled = true` — see
+   [Authentication](#authentication).
 
 If `webtick.ini` is missing, WebTick falls back to built-in defaults (the same
 values this project originally shipped with), so it will still run — just
@@ -54,6 +58,8 @@ See `webtick.ini.example` for a fully-commented copy of this.
 
 | Section | Key | Meaning | Default |
 |---|---|---|---|
+| `[auth]` | `enabled` | Protect `index.php` and `print.php` with [simplewebauth](#authentication) | `false` |
+| `[auth]` | `simplewebauth_dir` | Filesystem path to the simplewebauth deployment (must be web-accessible — see [Authentication](#authentication)) | `<webtick-root>/simplewebauth` |
 | `[tool]` | `python_bin` | Python interpreter used to run the print tool (point at a venv if needed) | `/usr/bin/python3` |
 | `[tool]` | `script_path` | Path to the `sysmatt.escpos.ticket.print` script | `/opt/sage/local/platform/scripts/sysmatt.escpos.ticket.print` |
 | `[printer]` | `default_queue` | CUPS queue preselected in the UI (falls back to a queue name containing "citizen", then the first available queue) | `CITIZEN_CT_S310_clocky4` |
@@ -67,8 +73,6 @@ See `webtick.ini.example` for a fully-commented copy of this.
 | `[fonts]` | *(any key)* `= path` | TTF font choices offered for Header/Title/Body. UI label is derived from the key (`liberation-sans-bold` → "Liberation Sans Bold"). Add/remove entries freely | Liberation + Ubuntu families |
 | `[font_defaults]` | `header`, `title`, `body` | Which `[fonts]` key (or blank for native ESC/POS) is preselected for each field | blank (native) |
 | `[font_sizes]` | `{header,title,body}_min` / `_max` / `_default` | Range and default value of each size slider (only meaningful when a TTF font is selected for that field) | header 1–60 (4), title 1–60 (2), body 1–60 (1) |
-| `[auth]` | `enabled` | Protect `index.php` and `print.php` with [simplewebauth](#authentication) | `false` |
-| `[auth]` | `simplewebauth_dir` | Filesystem path to the simplewebauth deployment (must be web-accessible — see [Authentication](#authentication)) | `<webtick-root>/simplewebauth` |
 
 Only fonts and printer widths/impls listed in `webtick.ini` are ever passed to
 the underlying tool — `print.php` validates every submitted value against
@@ -125,8 +129,8 @@ receipt mockup and, after printing, the full stdout/stderr from the print tool.
 ## File layout
 
 ```
-index.php              Form UI + live preview + AJAX submit
-print.php              Server-side validation and print execution
+index.php               Form UI + live preview + AJAX submit
+print.php               Server-side validation and print execution
 lib/config.php          webtick.ini loader (with built-in fallback defaults)
 webtick.ini.example     Documented config template — copy to ../webtick.ini
 ```
@@ -135,13 +139,7 @@ webtick.ini.example     Documented config template — copy to ../webtick.ini
 
 - `webtick.ini` is expected to live outside the document root; don't move it
   inside a web-accessible directory.
-- Font paths, pixel widths, and graphics implementations are only ever chosen
-  from the configured whitelists — arbitrary user input is never used as a
-  file path or shell argument without `escapeshellarg()`.
-- Uploaded images are validated with `getimagesize()` and an extension
-  whitelist before being passed to the print tool, and temp files are deleted
-  after each request.
-- As defense in depth, block `*.ini` files at the webserver regardless of
+- As defense in depth, also block `*.ini` files at the webserver regardless of
   where they live — this catches any config accidentally placed inside the
   docroot (yours or another app's). Nginx:
 
@@ -159,6 +157,12 @@ webtick.ini.example     Documented config template — copy to ../webtick.ini
       Require all denied
   </FilesMatch>
   ```
+- Font paths, pixel widths, and graphics implementations are only ever chosen
+  from the configured whitelists — arbitrary user input is never used as a
+  file path or shell argument without `escapeshellarg()`.
+- Uploaded images are validated with `getimagesize()` and an extension
+  whitelist before being passed to the print tool, and temp files are deleted
+  after each request.
 
 ## License
 

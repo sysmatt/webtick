@@ -468,6 +468,7 @@ input[type=file]::file-selector-button {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -475,6 +476,12 @@ input[type=file]::file-selector-button {
     font-size: 11px;
     color: var(--text);
     font-family: 'Courier New', Courier, monospace;
+}
+.image-file-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 .image-file-item button {
     background: none;
@@ -1221,6 +1228,7 @@ function renderImageList() {
         const item = document.createElement('div');
         item.className = 'image-file-item';
         const name = document.createElement('span');
+        name.className = 'image-file-name';
         name.textContent = f.name;
         const btn = document.createElement('button');
         btn.textContent = '✕';
